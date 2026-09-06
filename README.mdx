@@ -1,406 +1,87 @@
-# TravelTech IROPS — система автоматического перепланирования поездок
+# TravelTech IROPS
 
-[![Website](https://img.shields.io/badge/Website-Online-green)](https://your-username.github.io/TravelTech-Docs/)
-[![Docusaurus](https://img.shields.io/badge/Docusaurus-3.x-blue)](https://docusaurus.io/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**TravelTech IROPS** — проектная документация и прототип микросервисной системы для отслеживания сбоев рейсов и автоматического перепланирования поездок (кейс «Альфред, друг Бэтмена»).
 
-**TravelTech IROPS** (Irregular Operations) — это проектная документация и работающий прототип микросервисной системы для отслеживания сбоев рейсов и автоматического перепланирования поездки.
+## 🧩 Что делает система
 
-## 🎯 Цель проекта
-
-Разработать систему, которая:
-- ✅ Отслеживает статус рейсов через внешние API
-- ✅ При задержке/отмене уведомляет пользователя
-- ✅ Автоматически предлагает альтернативные рейсы, отели или активности
-- ✅ Обновляет общий план путешествия
-- ✅ Учитывает багаж, визы и таймзоны
-- ✅ Не хранит паспортные данные дольше необходимого
+- Отслеживает статус рейсов через внешние API
+- При задержке/отмене уведомляет пользователя
+- Предлагает альтернативные рейсы, отели или активности
+- Обновляет план путешествия
+- Учитывает багаж, визы и таймзоны
+- Паспортные данные удаляются через 30 дней после поездки
 
 ## 🏗️ Архитектура
 
+**Микросервисы**:
 
-graph TD
+- **Flight Tracker** — опрос внешних API, отправка событий в Kafka
+- **Trip Service** — управление поездками, проверка стыковок, принятие решений
+- **Alternative Service** — поиск альтернатив (рейсы, отели, активности)
+- **Notification Service** — отправка уведомлений (Push/Email/SMS)
+- **Payment Service** — обработка платежей
+- **Analytics Service** — сбор метрик, отправка в ML-модель
+- **API Gateway** — единая точка входа, аутентификация, маршрутизация
+
+**Инфраструктура**:
+
+- PostgreSQL — основная БД
+- Redis — кеш статусов
+- Kafka — очередь событий
+- Docker — контейнеризация
+
+```mermaid
+graph LR
     A[Клиент] --> B[API Gateway]
     B --> C[Flight Tracker]
     B --> D[Trip Service]
     B --> E[Alternative Service]
-    B --> F[Payment Service]
-    
-    D --> G[PostgreSQL]
-    D --> H[Redis]
-    D --> I[Kafka]
-    
-    I --> J[Notification Service]
-    I --> K[Analytics Service]
-    
-    C --> L[Aviation API]
-    E --> M[Booking API]
-    E --> N[Activity API]
-    F --> O[СБП / PayPal]
-
-Микросервисы
-Flight Tracker	--> Опрос внешних API для получения статусов рейсов	8001
-Trip Service (Диспетчер) --> Управление поездками, проверка стыковок, принятие решений	8002
-Alternative Service	--> Поиск альтернативных рейсов/отелей/активностей	8003
-Notification Service --> Отправка уведомлений (Push/Email/SMS)	8004
-Payment Service	--> Обработка платежей	8005
-Analytics Service --> Сбор метрик и отправка в ML-модель	8006
-API Gateway	--> Единая точка входа, аутентификация, маршрутизация	8080
-
-Инфраструктура
-PostgreSQL	--> Основная база данных (поездки, пользователи, рейсы)
-Redis	--> Кеширование статусов и сессий
-Kafka	--> Асинхронная очередь событий
-Elasticsearch	--> Поиск альтернатив и аналитика (опционально)
-
+    D --> F[PostgreSQL]
+    D --> G[Redis]
+    D --> H[Kafka]
+    H --> I[Notification Service]
+    H --> J[Analytics Service]
+    C --> K[Aviation API]
+    E --> L[Booking API]
+    E --> M[Activity API]
 
 🚀 Быстрый старт
-Запуск документации локально
-# 1. Клонировать репозиторий
+bash
+# Клонировать репозиторий
 git clone https://github.com/your-username/TravelTech-Docs.git
 cd TravelTech-Docs
-# 2. Установить зависимости
+
+# Установить зависимости
 npm install
-# 3. Запустить сайт документации
+
+# Запустить сайт документации
 npm start
-# Открыть http://localhost:3000
 
-Запуск микросервисов (Docker)
-# 1. Поднять всю инфраструктуру
-docker-compose up -d
-# 2. Проверить, что все сервисы работают
-docker-compose ps
-# 3. Остановить
-docker-compose down
-
-
-📊 Технологический стек
-
-Веб-фреймворк	--> FastAPI	0.104+
-База данных	--> PostgreSQL	15+
-Кеш	--> Redis	7.0+
-Очередь событий	--> Kafka	3.0+
-Контейнеризация	--> Docker / Docker Compose	20.10+
-Документация	--> Docusaurus	3.x
-API спецификация	--> OpenAPI 3.0, AsyncAPI 2.0	
-
----
-
-## Микросервисы (`docs/architecture/microservices.mdx`)
-
-```mdx
----
-id: microservices
-title: Микросервисы
-sidebar_position: 2
----
-
-# 🔧 Микросервисы
-
-## Trip Service (Диспетчер)
-
-**Роль**: Центральный управляющий сервис, принимающий решения.
-
-**Ключевые функции**:
-- Хранение и управление планом поездки
-- Проверка стыковок
-- Вызов Alternative Service при нарушении стыковки
-- Обработка решений пользователя
-- Отправка событий в Kafka
-
-**Технологии**: Python, FastAPI, SQLAlchemy, asyncpg
-
-**Эндпоинты**:
-- `GET /api/v1/trips/{trip_id}/status` — получить статус поездки
-- `POST /api/v1/trips/{trip_id}/decide` — принять решение
-
-**Пример кода (Dispatcher)**:
-```python
-async def handle_flight_status(self, event: Dict[str, Any]):
-    flight_id = event.get("flight_id")
-    new_status = event.get("status")
-    delay_minutes = event.get("delay_minutes", 0)
-    
-    # 1. Найти поездку
-    trip = await self._find_trip_by_flight(flight_id)
-    
-    # 2. Проверить стыковку
-    next_flight = await self._get_next_flight(trip.id, flight_id)
-    if next_flight and self._is_connection_broken(next_flight, delay_minutes):
-        # 3. Запросить альтернативу
-        alternative = await self._request_alternative(trip, flight_id)
-        # 4. Обновить маршрут
-        await self._update_trip_with_alternative(trip, flight_id, alternative)
-        # 5. Отправить уведомление
-        await self._notify_trip_updated(trip, alternative)
-Flight Tracker
-Роль: Опрос внешних API, отправка событий в Kafka.
-
-Ключевые функции:
-
-Периодический опрос API (каждые 5 минут)
-
-Кеширование статусов в Redis
-
-Отправка событий в Kafka при изменении статуса
-
-Технологии: Python, FastAPI, aiohttp, redis-py
-
-Эндпоинты:
-
-GET /api/v1/flights/{flight_number}/status — получить статус
-
-Alternative Service
-Роль: Поиск альтернатив через внешние API.
-
-Ключевые функции:
-
-Поиск альтернативных рейсов через Aviation API
-
-Поиск отелей через Booking API
-
-Поиск активностей через Activity API
-
-Ранжирование результатов
-
-Кеширование результатов
-
-Технологии: Python, FastAPI, aiohttp, Elasticsearch
-
-Эндпоинты:
-
-POST /api/v1/search — поиск альтернатив
-
-GET /api/v1/search/cached/{trip_id} — получить кешированные результаты
-
-Notification Service
-Роль: Отправка уведомлений пользователям.
-
-Ключевые функции:
-
-Прослушивание Kafka (trip_updated, flight_delayed)
-
-Отправка Push-уведомлений (Firebase)
-
-Отправка Email (SMTP/SendGrid)
-
-Отправка SMS (через шлюз)
-
-Хранение отложенных уведомлений
-
-Технологии: Python, FastAPI, Firebase Admin SDK, aiosmtplib
-
-Эндпоинты:
-
-GET /api/v1/notifications/pending/{user_id} — отложенные уведомления
-
-Payment Service
-Роль: Обработка платежей.
-
-Ключевые функции:
-
-Интеграция с СБП/PayPal
-
-Сохранение транзакций в PostgreSQL
-
-Отправка событий в Kafka
-
-Технологии: Python, FastAPI, yookassa/paypal-rest-sdk
-
-Эндпоинты:
-
-POST /api/v1/payments — создать платёж
-
-GET /api/v1/payments/{payment_id} — получить статус
-
-API Gateway
-Роль: Единая точка входа.
-
-Ключевые функции:
-
-Маршрутизация запросов
-
-Аутентификация (JWT)
-
-Rate limiting
-
-Логирование
-
-Технологии: Python, FastAPI, python-jose, redis
-
-text
-
----
-
-## 📄 5. Остальные MDX-файлы (кратко)
-
-Я приведу структуру для остальных папок, которые вы сможете заполнить по аналогии:
-
-### `docs/api/index.mdx` — Обзор API
-
-```mdx
----
-id: api
-title: Обзор API
-sidebar_position: 1
----
-
-# 📡 API-контракты
-
-## REST API
-
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/api/v1/trips/{id}/status` | Статус поездки |
-| POST | `/api/v1/trips/{id}/decide` | Решение пользователя |
-| POST | `/api/v1/search` | Поиск альтернатив |
-| POST | `/api/v1/payments` | Создать платёж |
-| GET | `/api/v1/notifications/pending/{user_id}` | Отложенные уведомления |
-
-### Событийная модель (Kafka)
-
-| Топик | Описание | Производитель | Потребители |
-|-------|----------|--------------|-------------|
-| `flight_status` | Изменение статуса рейса | Flight Tracker | Trip Service |
-| `trip_updated` | Обновление плана | Trip Service | Notification, Analytics |
-| `trip_confirmed` | Подтверждение поездки | Trip Service | Notification, Analytics |
-| `payment_status` | Статус оплаты | Payment Service | Notification, Trip Service |
-docs/database/schema.mdx — Схема БД
-mdx
----
-id: schema
-title: Схема базы данных
-sidebar_position: 2
----
-
-# 🗄️ Схема PostgreSQL
-
-## Таблицы
-
-### `trips`
-```sql
-CREATE TABLE trips (
-    id UUID PRIMARY KEY,
-    user_id UUID NOT NULL REFERENCES users(id),
-    status VARCHAR(50) DEFAULT 'active',
-    start_date DATE,
-    end_date DATE,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-trip_flights
-sql
-CREATE TABLE trip_flights (
-    id UUID PRIMARY KEY,
-    trip_id UUID NOT NULL REFERENCES trips(id),
-    flight_number VARCHAR(10) NOT NULL,
-    airline VARCHAR(50),
-    departure TIMESTAMP,
-    arrival TIMESTAMP,
-    status VARCHAR(50) DEFAULT 'scheduled',
-    delay_minutes INT DEFAULT 0,
-    baggage BOOLEAN DEFAULT FALSE,
-    visa_required BOOLEAN DEFAULT FALSE
-);
-trip_decisions
-sql
-CREATE TABLE trip_decisions (
-    id UUID PRIMARY KEY,
-    trip_id UUID REFERENCES trips(id),
-    user_id UUID REFERENCES users(id),
-    decision VARCHAR(50),  -- accept, reject, show_alternatives
-    selected_flight VARCHAR(10),
-    made_at TIMESTAMP DEFAULT NOW()
-);
-payments
-sql
-CREATE TABLE payments (
-    id UUID PRIMARY KEY,
-    user_id UUID REFERENCES users(id),
-    trip_id UUID REFERENCES trips(id),
-    amount DECIMAL(10,2),
-    currency VARCHAR(3) DEFAULT 'RUB',
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT NOW()
-);
-text
-
-### `docs/deployment/docker-compose.mdx` — Запуск
-
-```mdx
----
-id: docker-compose
-title: Запуск через Docker
-sidebar_position: 2
----
-
-# 🐳 Docker Compose
-
-## Полный файл
-
-```yaml
-version: '3.8'
-
-services:
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: traveltech
-    ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:7
-    ports:
-      - "6379:6379"
-
-  kafka:
-    image: bitnami/kafka:latest
-    ports:
-      - "9092:9092"
-
-  trip_service:
-    build: ./services/trip_service
-    ports:
-      - "8002:8000"
-    environment:
-      DB_URL: postgresql://user:pass@postgres:5432/traveltech
-      REDIS_URL: redis://redis:6379
-      KAFKA_BROKERS: kafka:9092
-
-  # ... аналогично для других сервисов
-Команды
+🐳 Запуск микросервисов (Docker)
 bash
-# Запуск всех сервисов
 docker-compose up -d
-
-# Проверка статуса
 docker-compose ps
-
-# Просмотр логов
-docker-compose logs -f trip_service
-
-# Остановка
 docker-compose down
+
+📁 Структура
 text
+TravelTech-Docs/
+├── README.md
+├── docs/                     # Документация (Docusaurus)
+│   ├── architecture/         # Архитектура
+│   ├── api/                  # API-контракты
+│   ├── database/             # Схема БД
+│   └── deployment/           # Развертывание
+├── services/                 # Микросервисы
+│   ├── flight_tracker/
+│   ├── trip_service/
+│   └── ...
+└── shared/                   # Общие модули (БД, Redis, Kafka)
 
----
+🛠️ Стек технологий
+Python 3.10+, FastAPI, PostgreSQL, Redis, Kafka, Docker, Docusaurus
 
-## 🚀 Финальная команда для создания проекта
+📖 Документация
 
-```bash
-# 1. Создать проект Docusaurus
-npx create-docusaurus@latest TravelTech-Docs classic --typescript
 
-# 2. Перейти в папку
-cd TravelTech-Docs
-
-# 3. Создать структуру папок
-mkdir -p docs/architecture docs/api docs/database docs/deployment
-
-# 4. Скопировать все MDX-файлы из моих примеров в соответствующие папки
-
-# 5. Запустить
-npm start
+Разработано для кейса «Альфред, друг Бэтмена» (Т-Образование)
