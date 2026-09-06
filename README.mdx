@@ -1,0 +1,39 @@
+# TravelTech IROPS — система автоматического перепланирования поездок
+
+[![Website](https://img.shields.io/badge/Website-Online-green)](https://your-username.github.io/TravelTech-Docs/)
+[![Docusaurus](https://img.shields.io/badge/Docusaurus-3.x-blue)](https://docusaurus.io/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**TravelTech IROPS** (Irregular Operations) — это проектная документация и работающий прототип микросервисной системы для отслеживания сбоев рейсов и автоматического перепланирования поездки.
+
+## 🎯 Цель проекта
+
+Разработать систему, которая:
+- ✅ Отслеживает статус рейсов через внешние API
+- ✅ При задержке/отмене уведомляет пользователя
+- ✅ Автоматически предлагает альтернативные рейсы, отели или активности
+- ✅ Обновляет общий план путешествия
+- ✅ Учитывает багаж, визы и таймзоны
+- ✅ Не хранит паспортные данные дольше необходимого
+
+## 🏗️ Архитектура
+
+```mermaid
+graph TD
+    A[Клиент] --> B[API Gateway]
+    B --> C[Flight Tracker]
+    B --> D[Trip Service]
+    B --> E[Alternative Service]
+    B --> F[Payment Service]
+    
+    D --> G[PostgreSQL]
+    D --> H[Redis]
+    D --> I[Kafka]
+    
+    I --> J[Notification Service]
+    I --> K[Analytics Service]
+    
+    C --> L[Aviation API]
+    E --> M[Booking API]
+    E --> N[Activity API]
+    F --> O[СБП / PayPal]
