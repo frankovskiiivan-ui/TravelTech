@@ -18,7 +18,7 @@
 
 ## 🏗️ Архитектура
 
-```mermaid
+
 graph TD
     A[Клиент] --> B[API Gateway]
     B --> C[Flight Tracker]
@@ -37,305 +37,56 @@ graph TD
     E --> M[Booking API]
     E --> N[Activity API]
     F --> O[СБП / PayPal]
+
 Микросервисы
-Сервис	Описание	Порт
-Flight Tracker	Опрос внешних API для получения статусов рейсов	8001
-Trip Service (Диспетчер)	Управление поездками, проверка стыковок, принятие решений	8002
-Alternative Service	Поиск альтернативных рейсов/отелей/активностей	8003
-Notification Service	Отправка уведомлений (Push/Email/SMS)	8004
-Payment Service	Обработка платежей	8005
-Analytics Service	Сбор метрик и отправка в ML-модель	8006
-API Gateway	Единая точка входа, аутентификация, маршрутизация	8080
+Flight Tracker	--> Опрос внешних API для получения статусов рейсов	8001
+Trip Service (Диспетчер) --> Управление поездками, проверка стыковок, принятие решений	8002
+Alternative Service	--> Поиск альтернативных рейсов/отелей/активностей	8003
+Notification Service --> Отправка уведомлений (Push/Email/SMS)	8004
+Payment Service	--> Обработка платежей	8005
+Analytics Service --> Сбор метрик и отправка в ML-модель	8006
+API Gateway	--> Единая точка входа, аутентификация, маршрутизация	8080
+
 Инфраструктура
-Компонент	Назначение
-PostgreSQL	Основная база данных (поездки, пользователи, рейсы)
-Redis	Кеширование статусов и сессий
-Kafka	Асинхронная очередь событий
-Elasticsearch	Поиск альтернатив и аналитика (опционально)
+PostgreSQL	--> Основная база данных (поездки, пользователи, рейсы)
+Redis	--> Кеширование статусов и сессий
+Kafka	--> Асинхронная очередь событий
+Elasticsearch	--> Поиск альтернатив и аналитика (опционально)
+
+
 🚀 Быстрый старт
 Запуск документации локально
-bash
 # 1. Клонировать репозиторий
 git clone https://github.com/your-username/TravelTech-Docs.git
 cd TravelTech-Docs
-
 # 2. Установить зависимости
 npm install
-
 # 3. Запустить сайт документации
 npm start
-
 # Открыть http://localhost:3000
+
 Запуск микросервисов (Docker)
-bash
 # 1. Поднять всю инфраструктуру
 docker-compose up -d
-
 # 2. Проверить, что все сервисы работают
 docker-compose ps
-
 # 3. Остановить
 docker-compose down
+
+
 📊 Технологический стек
-Компонент	Технология	Версия
-Язык программирования	Python	3.10+
-Веб-фреймворк	FastAPI	0.104+
-База данных	PostgreSQL	15+
-Кеш	Redis	7.0+
-Очередь событий	Kafka	3.0+
-Контейнеризация	Docker / Docker Compose	20.10+
-Документация	Docusaurus	3.x
-API спецификация	OpenAPI 3.0, AsyncAPI 2.0	
-📁 Структура репозитория
-text
-TravelTech-Docs/
-├── README.md                 # Главный README для GitHub
-├── docs/                     # Документация (Docusaurus)
-│   ├── index.mdx             # Главная страница
-│   ├── architecture/         # Архитектура
-│   ├── api/                  # API-контракты
-│   ├── database/             # Схема БД
-│   └── deployment/           # Развертывание
-├── static/                   # Статические файлы
-├── docusaurus.config.js      # Конфигурация сайта
-├── sidebars.js               # Боковое меню
-└── package.json
-📖 Документация
-Архитектура
 
-API-контракты
-
-Схема базы данных
-
-Развертывание
-
-🤝 Вклад в проект
-Fork репозитория
-
-Создайте ветку для ваших изменений (git checkout -b feature/AmazingFeature)
-
-Commit изменения (git commit -m 'Add some AmazingFeature')
-
-Push в ветку (git push origin feature/AmazingFeature)
-
-Откройте Pull Request
-
-📝 Лицензия
-Распространяется под лицензией MIT. См. файл LICENSE для дополнительной информации.
-
-🙏 Благодарности
-Кейс «Альфред, друг Бэтмена» (Т-Образование)
-
-Apache Kafka, PostgreSQL, Redis, FastAPI, Docusaurus
-
-Разработано с ❤️ для кейса «Альфред, друг Бэтмена»
-
-text
+Веб-фреймворк	--> FastAPI	0.104+
+База данных	--> PostgreSQL	15+
+Кеш	--> Redis	7.0+
+Очередь событий	--> Kafka	3.0+
+Контейнеризация	--> Docker / Docker Compose	20.10+
+Документация	--> Docusaurus	3.x
+API спецификация	--> OpenAPI 3.0, AsyncAPI 2.0	
 
 ---
 
-## 📄 2. Главная страница (`docs/index.mdx`)
-
-```mdx
----
-id: index
-title: Добро пожаловать в TravelTech IROPS
-sidebar_position: 1
----
-
-# 🚀 TravelTech IROPS
-
-**TravelTech IROPS** (Irregular Operations) — это система для отслеживания сбоев рейсов и автоматического перепланирования поездок.
-
-## 📖 О проекте
-
-Проект разработан для кейса **«Альфред, друг Бэтмена»** (Т-Образование, 2026) и включает:
-
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
-<Tabs>
-  <TabItem value="problem" label="Проблема" default>
-    - Задержки и отмены рейсов нарушают планы путешественников
-    - Пользователи не получают своевременных уведомлений
-    - Нет автоматической системы поиска альтернатив
-    - Сложно учитывать багаж, визы и таймзоны
-  </TabItem>
-  <TabItem value="solution" label="Решение">
-    - Отслеживание статусов через внешние API
-    - Мгновенные уведомления (Push/Email/SMS)
-    - Автоматический поиск альтернатив (рейсы, отели, активности)
-    - Обновление плана с учетом всех ограничений
-  </TabItem>
-  <TabItem value="architecture" label="Архитектура">
-    - 7 микросервисов с асинхронным обменом через Kafka
-    - PostgreSQL для ACID-транзакций
-    - Redis для кеширования статусов
-    - Docker для контейнеризации
-  </TabItem>
-</Tabs>
-
-## 🏗️ Архитектура в 30 секунд
-
-```mermaid
-graph LR
-    A[Клиент] --> B[API Gateway]
-    B --> C[Flight Tracker]
-    B --> D[Trip Service]
-    B --> E[Alternative Service]
-    
-    D --> F[PostgreSQL]
-    D --> G[Redis]
-    D --> H[Kafka]
-    
-    H --> I[Notification Service]
-    H --> J[Analytics Service]
-    
-    C --> K[Aviation API]
-    E --> L[Booking API]
-    E --> M[Activity API]
-Ключевые компоненты:
-
-Диспетчер (Trip Service) — принимает решения (проверка стыковок, запуск замены)
-
-Flight Tracker — опрашивает внешние API
-
-Alternative Service — ищет замены через внешние API
-
-🚀 Быстрый старт
-bash
-# 1. Клонировать репозиторий
-git clone https://github.com/your-username/TravelTech-Docs.git
-cd TravelTech-Docs
-
-# 2. Запустить сайт документации
-npm install
-npm start
-
-# 3. Открыть http://localhost:3000
-📚 Что дальше?
-Обзор архитектуры — детальное описание микросервисов
-
-API-контракты — REST и событийная модели
-
-Схема базы данных — структура PostgreSQL и Redis
-
-🔗 Полезные ссылки
-GitHub репозиторий
-
-Т-Образование
-
-Кейс «Альфред, друг Бэтмена»
-
-text
-
----
-
-## 📄 3. Архитектура (`docs/architecture/index.mdx`)
-
-```mdx
----
-id: architecture
-title: Обзор архитектуры
-sidebar_position: 1
----
-
-# 🏛️ Обзор архитектуры
-
-## Микросервисная архитектура
-
-Система построена на **микросервисной архитектуре** с асинхронным обменом через Apache Kafka.
-
-### Компоненты системы
-
-```mermaid
-graph TD
-    subgraph "Внешние API"
-        A[Aviation API]
-        B[Booking API]
-        C[Activity API]
-        D[СБП / PayPal]
-    end
-    
-    subgraph "Внутренние сервисы"
-        E[Flight Tracker]
-        F[Trip Service]
-        G[Alternative Service]
-        H[Payment Service]
-        I[Notification Service]
-        J[Analytics Service]
-    end
-    
-    subgraph "Инфраструктура"
-        K[PostgreSQL]
-        L[Redis]
-        M[Kafka]
-    end
-    
-    A --> E
-    B --> G
-    C --> G
-    D --> H
-    
-    E --> M
-    F --> K
-    F --> L
-    F --> M
-    
-    M --> I
-    M --> J
-Сервисы
-Сервис	Описание	Порт	Язык
-Flight Tracker	Опрос внешних API, отправка событий в Kafka	8001	Python (FastAPI)
-Trip Service (Диспетчер)	Управление поездками, проверка стыковок, принятие решений	8002	Python (FastAPI)
-Alternative Service	Поиск альтернатив через внешние API	8003	Python (FastAPI)
-Notification Service	Отправка уведомлений (Push/Email/SMS)	8004	Python (FastAPI)
-Payment Service	Обработка платежей	8005	Python (FastAPI)
-Analytics Service	Сбор метрик и отправка в ML-модель	8006	Python (FastAPI)
-API Gateway	Единая точка входа, аутентификация, маршрутизация	8080	Python (FastAPI)
-Инфраструктура
-Компонент	Назначение	Технология
-Основная база данных	Хранит поездки, пользователей, рейсы	PostgreSQL 15+
-Кеш	Кеширует статусы и сессии	Redis 7.0+
-Очередь событий	Асинхронная связь между сервисами	Apache Kafka 3.0+
-Поисковый движок	Поиск альтернатив и аналитика	Elasticsearch 8.0+ (опционально)
-Потоки данных
-Основной сценарий: задержка рейса
-sequenceDiagram
-    participant FT as Flight Tracker
-    participant K as Kafka
-    participant TS as Trip Service
-    participant AS as Alternative Service
-    participant NS as Notification Service
-    participant U as Пользователь
-    
-    FT->>K: flight_status (задержка 45 мин)
-    K->>TS: событие
-    TS->>TS: проверка стыковки
-    TS->>AS: запрос альтернативы
-    AS-->>TS: рейс SU5678
-    TS->>K: trip_updated
-    K->>NS: событие
-    NS->>U: уведомление
-    U->>TS: подтверждение
-    TS->>K: trip_confirmed
-Требования
-Функциональные
-ID	Требование	Приоритет
-FR-ALT-01	Система должна отслеживать статус рейсов через внешние API	Высокий
-FR-ALT-02	При задержке/отмене система должна уведомлять пользователя	Высокий
-FR-ALT-03	Система должна предлагать альтернативные рейсы/отели/активности	Высокий
-FR-ALT-04	Система должна обновлять план путешествия	Высокий
-Нефункциональные
-ID	Требование	Приоритет
-NFR-PERF-01	Время ответа API < 200 мс (p95)	Высокий
-NFR-AVAIL-01	Доступность 99.9% (с учетом отказа внешних API)	Высокий
-NFR-SEC-01	Шифрование паспортных данных, удаление через 30 дней	Высокий
-text
-
----
-
-## 📄 4. Микросервисы (`docs/architecture/microservices.mdx`)
+## Микросервисы (`docs/architecture/microservices.mdx`)
 
 ```mdx
 ---
