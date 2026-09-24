@@ -23,32 +23,38 @@ TravelTech/
 │   ├── api_gateway/                 # Точка входа для клиента
 │   │   ├── main.py
 │   │   ├── routes.py
+│   │   ├──__init__.py
 │   │
 │   ├── trip_service/                # Ядро: диспетчер + поиск альтернатив
 │   │   ├── main.py
 │   │   ├── dispatcher.py            # TripServiceDispatcher
+│   │   ├──__init__.py
 │   │
 │   ├── flight_tracker/              # Отслеживание рейсов
 │   │   ├── main.py
 │   │   └── tracker.py
+│   │   ├──__init__.py
 │   │
 │   ├── external_adapters/           # Интеграции с внешними API
 │   │   ├── base.py
 │   │   ├── aviation_api.py
 │   │   ├── booking_api.py
 │   │   └── payment_api.py
+│   │   ├──__init__.py
 │   │
 │   ├── notification_service/        # Уведомления
 │   │   ├── main.py
-│   │   ├── handler.py
 │   │   └── channels/
 │   │       ├── push.py
 │   │       ├── email.py
 │   │       └── sms.py
+│   │       ├── handler.py
+│   │       └── __init__.py
 │   │
 │   └── recommendation_service/      # ML-персонализация
 │       ├── main.py
 │       └── personalizer.py
+│   │   ├──__init__.py
 │
 ├── shared/                          # Общий код
 │   ├── config.py                    # Настройки (env)
@@ -56,7 +62,8 @@ TravelTech/
 │   ├── database.py                  # PostgreSQL
 │   ├── cache.py                     # Redis
 │   ├── kafka_client.py              # Kafka
-│
+│   ├──__init__.py
+│   │
 ├── infra/                           # Инфраструктура
 │   ├── docker-compose.yml           # Postgres, Redis, Kafka
 │
