@@ -1,0 +1,87 @@
+# TravelTech IROPS
+
+**TravelTech IROPS** — проектная документация и прототип микросервисной системы для отслеживания сбоев рейсов и автоматического перепланирования поездок (кейс «Альфред, друг Бэтмена»).
+
+## 🧩 Что делает система
+
+- Отслеживает статус рейсов через внешние API
+- При задержке/отмене уведомляет пользователя
+- Предлагает альтернативные рейсы, отели или активности
+- Обновляет план путешествия
+- Учитывает багаж, визы и таймзоны
+- Паспортные данные удаляются через 30 дней после поездки
+
+## 🏗️ Архитектура
+
+**Микросервисы**:
+
+- **Flight Tracker** — опрос внешних API, отправка событий в Kafka
+- **Trip Service** — управление поездками, проверка стыковок, принятие решений
+- **Alternative Service** — поиск альтернатив (рейсы, отели, активности)
+- **Notification Service** — отправка уведомлений (Push/Email/SMS)
+- **Payment Service** — обработка платежей
+- **Analytics Service** — сбор метрик, отправка в ML-модель
+- **API Gateway** — единая точка входа, аутентификация, маршрутизация
+
+**Инфраструктура**:
+
+- PostgreSQL — основная БД
+- Redis — кеш статусов
+- Kafka — очередь событий
+- Docker — контейнеризация
+
+```mermaid
+graph LR
+    A[Клиент] --> B[API Gateway]
+    B --> C[Flight Tracker]
+    B --> D[Trip Service]
+    B --> E[Alternative Service]
+    D --> F[PostgreSQL]
+    D --> G[Redis]
+    D --> H[Kafka]
+    H --> I[Notification Service]
+    H --> J[Analytics Service]
+    C --> K[Aviation API]
+    E --> L[Booking API]
+    E --> M[Activity API]
+
+🚀 Быстрый старт
+bash
+# Клонировать репозиторий
+git clone https://github.com/your-username/TravelTech-Docs.git
+cd TravelTech-Docs
+
+# Установить зависимости
+npm install
+
+# Запустить сайт документации
+npm start
+
+🐳 Запуск микросервисов (Docker)
+bash
+docker-compose up -d
+docker-compose ps
+docker-compose down
+
+📁 Структура
+text
+TravelTech-Docs/
+├── README.md
+├── docs/                     # Документация (Docusaurus)
+│   ├── architecture/         # Архитектура
+│   ├── api/                  # API-контракты
+│   ├── database/             # Схема БД
+│   └── deployment/           # Развертывание
+├── services/                 # Микросервисы
+│   ├── flight_tracker/
+│   ├── trip_service/
+│   └── ...
+└── shared/                   # Общие модули (БД, Redis, Kafka)
+
+🛠️ Стек технологий
+Python 3.10+, FastAPI, PostgreSQL, Redis, Kafka, Docker, Docusaurus
+
+📖 Документация
+
+
+Разработано для кейса «Альфред, друг Бэтмена» (Т-Образование)
