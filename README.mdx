@@ -1,85 +1,541 @@
-# TravelTech IROPS
+# TravelTech Backend
 
-**TravelTech IROPS** — проектная документация и прототип микросервисной системы для отслеживания сбоев рейсов и автоматического перепланирования поездок (кейс «Альфред, друг Бэтмена»).
+Система оркестрации и обработки поездок (Trip Orchestration) для TravelTech-платформы.  
+Проект реализует логику диспетчеризации: поиск альтернатив, обработка статусов рейсов, оплата и уведомления через Kafka.
 
-## 🧩 Что делает система
+**Стек:** Python, FastAPI (сервисный слой), SQLAlchemy, asyncpg, Redis, Kafka, Airflow (оркестрация DAG), Apache Spark (обработка данных), PostgreSQL.
 
-- Отслеживает статус рейсов через внешние API
-- При задержке/отмене уведомляет пользователя
-- Предлагает альтернативные рейсы, отели или активности
-- Обновляет план путешествия
-- Учитывает багаж, визы и таймзоны
-- Паспортные данные удаляются через 30 дней после поездки
+## 🗺 Архитектура в двух словах
 
-## 🏗️ Архитектура
+TravelTech построен по принципу разделения ответственности:
 
-**Микросервисы**:
+- **Оркестрационный слой (TripServiceDispatcher)** — чистая логика принятия решений, вызова адаптеров, записи в БД и публикации событий. Используется в Airflow DAG и Spark-задачах.
+- **Сервисный слой (FastAPI + Kafka Consumer)** — HTTP API для внешних клиентов и фоновая обработка событий о задержках рейсов.
+- **Shared-компоненты** — клиенты, логирование, утилиты.
 
-- **Flight Tracker** — опрос внешних API, отправка событий в Kafka
-- **Trip Service** — управление поездками, проверка стыковок, принятие решений
-- **Alternative Service** — поиск альтернатив (рейсы, отели, активности)
-- **Notification Service** — отправка уведомлений (Push/Email/SMS)
-- **Payment Service** — обработка платежей
-- **Analytics Service** — сбор метрик, отправка в ML-модель
-- **API Gateway** — единая точка входа, аутентификация, маршрутизация
+Такая структура позволяет запускать тяжёлые пайплайны (Spark/Airflow) отдельно от онлайн‑сервиса, а также легко подключать новые адаптеры (авиа, отели, платежи).
 
-**Инфраструктура**:
 
-- PostgreSQL — основная БД
-- Redis — кеш статусов
-- Kafka — очередь событий
-- Docker — контейнеризация
+TravelTech/
+│
+├── services/                        # Микросервисы
+│   │
+│   ├── api_gateway/                 # Точка входа для клиента
+│   │   ├── main.py
+│   │   ├── routes.py
+│   │
+│   ├── trip_service/                # Ядро: диспетчер + поиск альтернатив
+│   │   ├── main.py
+│   │   ├── dispatcher.py            # TripServiceDispatcher
+│   │
+│   ├── flight_tracker/              # Отслеживание рейсов
+│   │   ├── main.py
+│   │   └── tracker.py
+│   │
+│   ├── external_adapters/           # Интеграции с внешними API
+│   │   ├── base.py
+│   │   ├── aviation_api.py
+│   │   ├── booking_api.py
+│   │   └── payment_api.py
+│   │
+│   ├── notification_service/        # Уведомления
+│   │   ├── main.py
+│   │   ├── handler.py
+│   │   └── channels/
+│   │       ├── push.py
+│   │       ├── email.py
+│   │       └── sms.py
+│   │
+│   └── recommendation_service/      # ML-персонализация
+│       ├── main.py
+│       └── personalizer.py
+│
+├── shared/                          # Общий код
+│   ├── config.py                    # Настройки (env)
+│   ├── logger.py                    # Логирование
+│   ├── database.py                  # PostgreSQL
+│   ├── cache.py                     # Redis
+│   ├── kafka_client.py              # Kafka
+│
+├── infra/                           # Инфраструктура
+│   ├── docker-compose.yml           # Postgres, Redis, Kafka
+│
+│
+├── .env.example                     # Пример переменных окружения
+├── .gitignore
+├── Makefile                         # Команды управления проектом
+├── pyproject.toml                   # Зависимости и настройки инструментов
+└── README.md
+```
 
-```mermaid
-graph LR
-    A[Клиент] --> B[API Gateway]
-    B --> C[Flight Tracker]
-    B --> D[Trip Service]
-    B --> E[Alternative Service]
-    D --> F[PostgreSQL]
-    D --> G[Redis]
-    D --> H[Kafka]
-    H --> I[Notification Service]
-    H --> J[Analytics Service]
-    C --> K[Aviation API]
-    E --> L[Booking API]
-    E --> M[Activity API]
+---
+## 🚀 Быстрый старт
 
-🚀 Быстрый старт
-bash
-# Клонировать репозиторий
-git clone https://github.com/your-username/TravelTech-Docs.git
-cd TravelTech-Docs
+### Предварительные требования
 
-# Установить зависимости
-npm install
+- **Python** 3.11+
+- **Docker** и **Docker Compose** (v2)
+- **Make** (см. раздел [Установка Make](#-установка-make))
 
-# Запустить сайт документации
-npm start
+### 1. Клонирование репозитория
 
-🐳 Запуск микросервисов (Docker)
-bash
-docker-compose up -d
-docker-compose ps
-docker-compose down
+```bash
+git clone https://github.com/frankovskiiivan-ui/TravelTech.git
+cd TravelTech
+```
 
-📁 Структура
-text
-TravelTech-Docs/
-├── README.md
-├── docs/                     # Документация (Docusaurus)
-│   ├── architecture/         # Архитектура
-│   ├── api/                  # API-контракты
-│   ├── database/             # Схема БД
-│   └── deployment/           # Развертывание
-├── services/                 # Микросервисы
-│   ├── flight_tracker/
-│   ├── trip_service/
-│   └── ...
-└── shared/                   # Общие модули (БД, Redis, Kafka)
+### 2. Виртуальное окружение
 
-🛠️ Стек технологий
-Python 3.10+, FastAPI, PostgreSQL, Redis, Kafka, Docker, Docusaurus
+```bash
+python -m venv .venv
+
+# Linux / macOS
+source .venv/bin/activate
+
+# Windows (PowerShell)
+.venv\Scripts\Activate.ps1
+```
+
+### 3. Установка зависимостей
+
+```bash
+make install-dev
+```
+
+Или без Make:
+```bash
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+### 4. Настройка окружения
+
+```bash
+cp .env.example .env
+# отредактируйте .env при необходимости
+```
+
+### 5. Запуск инфраструктуры
+
+```bash
+make infra-up
+```
+
+Будут запущены:
+- **PostgreSQL** → `localhost:5432`
+- **Redis** → `localhost:6379`
+- **Kafka** → `localhost:9092`
+
+### 6. Запуск сервисов
+
+Откройте **отдельные терминалы** для каждого сервиса:
+
+**Терминал 1 — Notification Service:**
+```bash
+make run-notification
+```
+
+**Терминал 2 — Trip Service:**
+```bash
+make run-trip
+```
+
+**Терминал 3 — API Gateway:**
+```bash
+make run-gateway
+```
+
+**Терминал 4 — Flight Tracker (опционально):**
+```bash
+make run-tracker
+```
+
+### 7. Проверка работы
+
+Swagger UI:
+```
+http://localhost:8000/docs
+```
+
+Тестовый запрос:
+```bash
+curl -X POST http://localhost:8000/api/v1/search \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_id": "user_123",
+    "origin": "Moscow",
+    "destination": "Paris",
+    "date": "2026-10-01"
+  }'
+```
+
+---
+
+## 🔌 API Reference
+
+### `POST /api/v1/status` — статус рейса
+
+**Request:**
+```json
+{ "flight_number": "SU1234" }
+```
+
+**Response:**
+```json
+{
+  "flight_number": "SU1234",
+  "status": "on_time",
+  "departure": "SVO 10:30",
+  "arrival": "CDG 13:00"
+}
+```
+
+---
+
+### `POST /api/v1/search` — поиск вариантов
+
+**Request:**
+```json
+{
+  "user_id": "user_123",
+  "origin": "Moscow",
+  "destination": "Paris",
+  "date": "2026-10-01"
+}
+```
+
+**Response:**
+```json
+{
+  "trip_id": "trip_user_123_4",
+  "status": "offer_created",
+  "offers": [
+    { "type": "hotel",  "data": { "name": "Ibis Paris", "price": 6500 } },
+    { "type": "flight", "data": { "airline": "S7",       "price": 12500 } }
+  ]
+}
+```
+
+---
+
+### `POST /api/v1/pay` — оплата
+
+**Request:**
+```json
+{
+  "user_id": "user_123",
+  "trip_id": "trip_user_123_4",
+  "amount": 15000,
+  "method": "SBP"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "transaction_id": "PAY-trip_user_123_4",
+  "amount": 15000
+}
+```
+
+---
+
+### `POST /api/v1/trips/{trip_id}/decide` — решение пользователя
+
+Принять или отклонить предложенную альтернативу.
+
+**Request:**
+```json
+{
+  "user_id": "user_123",
+  "decision": "accept",
+  "selected_flight": "FL001"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "status": "ok",
+    "trip_id": "trip_user_123_4",
+    "decision": "accept"
+  }
+}
+```
+
+---
+
+### `GET /api/v1/trips/{trip_id}/status` — статус поездки
+
+**Response:**
+```json
+{
+  "trip_id": "trip_user_123_4",
+  "status": "confirmed",
+  "updated_at": "2026-09-24T12:34:56Z",
+  "source": "cache"
+}
+```
+
+---
+
+## 🔄 Поток данных
+
+1. **Клиент** → отправляет запрос в **API Gateway**
+2. **API Gateway** → маршрутизирует в **Trip Service** или **Flight Tracker**
+3. **Trip Service (Dispatcher)**:
+   - Через **External Adapters** обращается к внешним API
+   - Сохраняет результат в **PostgreSQL**
+   - Кэширует статусы в **Redis**
+   - Публикует событие в **Kafka** (топик `trip_events`)
+4. **Notification Service** ← слушает Kafka:
+   - Получает событие
+   - Обращается к **Recommendation Service** за персонализацией
+   - Отправляет уведомление через **Push / Email / SMS**
+
+### 🚨 Обработка задержек рейсов
+
+Особый сценарий — когда Flight Tracker присылает событие о задержке:
+
+```
+Flight Tracker → Kafka (flight_status)
+                      ↓
+              Trip Service (Dispatcher)
+                      ↓
+        Проверка стыковки (connection_time - delay_minutes)
+                      ↓
+         ┌────────────┴────────────┐
+         ▼                         ▼
+  Стыковка OK              Стыковка нарушена
+         │                         │
+         ▼                         ▼
+  Уведомить о задержке    Найти альтернативу
+                                   │
+                        ┌──────────┴──────────┐
+                        ▼                     ▼
+                  Альтернатива есть     Альтернативы нет
+                        │                     │
+                        ▼                     ▼
+              Обновить маршрут       Уведомить о задержке
+              Уведомить юзера        без альтернативы
+```
+
+---
+
+## 📨 События Kafka
+
+### Топик `trip_events`
+
+| Событие | Когда отправляется | Payload |
+|---|---|---|
+| `offer_created` | После успешного поиска | `trip_id`, `user_id`, `offers_count` |
+| `payment_success` | После успешной оплаты | `trip_id`, `user_id`, `transaction_id` |
+| `payment_failed` | При ошибке оплаты | `trip_id`, `user_id`, `reason` |
+| `trip_confirmed` | Пользователь принял альтернативу | `trip_id`, `user_id`, `selected_flight` |
+| `trip_declined` | Пользователь отклонил альтернативу | `trip_id`, `user_id` |
+| `trip_updated` | Маршрут обновлен автоматически | `trip_id`, `user_id`, `old_flight`, `new_flight` |
+| `flight_delayed` | Рейс задержан (стыковка OK) | `trip_id`, `flight_id`, `delay_minutes` |
+| `flight_delayed_no_alternative` | Задержка, альтернативы нет | `trip_id`, `flight_id`, `delay_minutes` |
+
+---
+
+## 🗄 Модели данных (PostgreSQL)
+
+### `trips`
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | String (PK) | ID поездки |
+| `user_id` | String | ID пользователя |
+| `status` | String | `active`, `updated`, `confirmed`, `paid`, `declined` |
+| `start_date` | DateTime | Дата начала |
+| `end_date` | DateTime | Дата окончания |
+| `created_at` | DateTime | Создано |
+| `updated_at` | DateTime | Обновлено |
+
+### `trip_flights`
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | String (PK) | ID рейса |
+| `trip_id` | String (FK) | ID поездки |
+| `flight_number` | String | Номер рейса |
+| `airline` | String | Авиакомпания |
+| `departure` | DateTime | Вылет |
+| `arrival` | DateTime | Прилет |
+| `status` | String | `scheduled`, `delayed`, `replaced` |
+| `baggage` | Boolean | Наличие багажа |
+| `visa_required` | Boolean | Требуется ли виза |
+
+### `trip_decisions`
+| Поле | Тип | Описание |
+|---|---|---|
+| `id` | UUID (PK) | ID решения |
+| `trip_id` | String (FK) | ID поездки |
+| `user_id` | String | ID пользователя |
+| `decision` | String | `accept` / `decline` |
+| `selected_flight` | String | Выбранный рейс (если `accept`) |
+| `made_at` | DateTime | Когда принято |
+
+### `trip_changes`
+История изменений маршрута (для аудита и аналитики).
+
+---
+
+## 🛠 Makefile — управление проектом
+
+Все команды — в одном месте. Запустите `make help`, чтобы увидеть полный список.
+
+| Команда | Описание |
+|---|---|
+| `make help` | Показать список всех команд |
+| `make install` | Установить зависимости |
+| `make install-dev` | Установить зависимости + dev-инструменты |
+| `make infra-up` | Поднять Postgres / Redis / Kafka |
+| `make infra-down` | Остановить инфраструктуру |
+| `make infra-logs` | Логи инфраструктуры |
+| `make run-gateway` | Запустить API Gateway (порт 8000) |
+| `make run-trip` | Запустить Trip Service |
+| `make run-tracker` | Запустить Flight Tracker |
+| `make run-notification` | Запустить Notification Service |
+| `make run-recommendation` | Запустить Recommendation Service |
+| `make test` | Все тесты |
+| `make test-unit` | Только unit-тесты |
+| `make test-integration` | Только интеграционные тесты |
+| `make test-cov` | Тесты с покрытием (HTML-отчёт) |
+| `make lint` | Проверка кода (Ruff) |
+| `make format` | Форматирование (Black + Ruff) |
+| `make typecheck` | Проверка типов (MyPy) |
+| `make clean` | Очистка временных файлов |
+
+### Установка Make
+
+**Linux:**
+```bash
+sudo apt install make       # Debian/Ubuntu
+sudo yum install make       # CentOS/RHEL
+```
+
+**macOS:**
+```bash
+xcode-select --install
+# или
+brew install make
+```
+
+**Windows:**
+```powershell
+choco install make          # через Chocolatey
+# или
+scoop install make          # через Scoop
+# или используйте WSL / Git Bash (make уже включен)
+```
+
+---
+
+## 🧪 Тестирование
+
+```bash
+# Все тесты
+make test
+
+# Только unit-тесты
+make test-unit
+
+# Только интеграционные
+make test-integration
+
+# С покрытием (отчёт в htmlcov/index.html)
+make test-cov
+```
+
+---
+
+## 🐳 Docker
+
+### Запуск инфраструктуры
+
+```bash
+make infra-up
+```
+
+### Запуск всех сервисов в Docker
+
+```bash
+make docker-up
+```
+
+### Остановка
+
+```bash
+make docker-down
+make infra-down
+```
+
+### Полный сброс (с удалением volumes)
+
+```bash
+make infra-reset
+```
+
+---
+
+## 🔐 Переменные окружения
+
+Все настройки — в `.env`. Шаблон — в `.env.example`.
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `APP_ENV` | `development` | Окружение (`development` / `production`) |
+| `LOG_LEVEL` | `INFO` | Уровень логирования |
+| `DB_URL` | `postgresql+asyncpg://user:pass@postgres:5432/traveltech` | DSN для PostgreSQL (async) |
+| `REDIS_URL` | `redis://redis:6379/0` | URL для Redis |
+| `KAFKA_BROKERS` | `kafka:9092` | Адрес Kafka |
+| `KAFKA_TOPIC_EVENTS` | `trip_events` | Топик для событий |
+| `TRIP_SERVICE_URL` | `http://trip_service:8001` | URL Trip Service |
+| `FLIGHT_TRACKER_URL` | `http://flight_tracker:8002` | URL Flight Tracker |
+| `AVIATION_API_URL` | `https://api.aviation.mock` | Внешний авиа-API |
+| `BOOKING_API_URL` | `https://api.booking.mock` | Booking.com API |
+| `PAYMENT_API_URL` | `https://api.payment.mock` | СБП / PayPal API |
+
+---
+
+## 🗺 Roadmap
+
+- [x] Базовая архитектура микросервисов
+- [x] API Gateway (`/status`, `/search`, `/pay`, `/decide`)
+- [x] Интеграция с внешними API (моки)
+- [x] Kafka-события и уведомления
+- [x] ML-персонализация
+- [x] **Обработка задержек рейсов** и замена маршрута
+- [ ] **Analytic Service** (отчёты, ML-метрики)
+- [ ] **Real-time трекинг** рейсов через WebSocket
+- [ ] **A/B тестирование** рекомендаций
+- [ ] **Мониторинг** (Prometheus + Grafana)
+- [ ] **CI/CD** через GitHub Actions
+- [ ] **Kubernetes** deployment
+
+---
+
+
+
+
+
+
+
+
+
+
+## 🚀 Быстрый старт
+
+### Локальная установка
+
+1. Клонируй репозиторий:
+   ```bash
+   git clone https://github.com/frankovskiiivan-ui/TravelTech.git
+   cd TravelTech
+
 
 📖 Документация
 
