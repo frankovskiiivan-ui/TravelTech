@@ -10,3 +10,9 @@ dist/
 build/
 node_modules/
 .docusaurus/
+
+all_code.txt
+project_code.txt
+test_airlabs.py
+test_staying.py
+collect_code.py
