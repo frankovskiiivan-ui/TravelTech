@@ -29,7 +29,7 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: 'Развертывание',
+      label: 'Развёртывание',
       items: [
         'deployment/docker-compose',
         'deployment/local-setup',

@@ -73,7 +73,7 @@ const config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} TravelTech. Built with Docusaurus.`,
+      copyright: `Copyright (c) ${new Date().getFullYear()} TravelTech. Built with Docusaurus.`,
     },
   },
 };
