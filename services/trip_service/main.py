@@ -1,42 +1,45 @@
 """Точка входа Trip Service"""
-import asyncio
-from shared.database import Database
-from shared.kafka_client import KafkaClient
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+from services.trip_service.dispatcher import dispatcher
+from shared.database import db
+from shared.cache import cache
+from shared.kafka_client import kafka
+from shared.config import settings
 from shared.logger import get_logger
-from services.external_adapters.aviation_api import AviationAPI
-from services.external_adapters.booking_api import BookingAPI
-from services.external_adapters.payment_api import PaymentAPI
-from services.trip_service.dispatcher import TripServiceDispatcher
 
-logger = get_logger("TripService.Main")
+log = get_logger("trip_service")
 
+class TripRequest(BaseModel):
+    user_id: str
+    flight_number: str
+    city: Optional[str] = ""
 
-async def main():
-    logger.info("🚀 Trip Service starting...")
-    
-    # Инициализация зависимостей
-    db = Database()
-    kafka = KafkaClient()
-    
-    adapters = {
-        "aviation": AviationAPI(),
-        "booking": BookingAPI(),
-        "payment": PaymentAPI()
-    }
-    
-    dispatcher = TripServiceDispatcher(adapters, db, kafka)
-    
-    # Демонстрация работы
-    result = await dispatcher.handle_find_offer({
-        "user_id": "user_123",
-        "origin": "Moscow",
-        "destination": "Paris"
-    })
-    logger.info(f"Result: {result}")
-    
-    # Даем Kafka время доставить сообщения
-    await asyncio.sleep(1)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info("Trip Service starting...")
+    await db.connect()
+    await cache.connect()
+    await kafka.start_producer()
+    # Подписываемся на feedback
+    await kafka.subscribe(settings.kafka_topic_feedback, "trip-service", dispatcher.handle_feedback)
+    yield
+    await kafka.stop_all()
+    await cache.disconnect()
+    await db.disconnect()
 
+app = FastAPI(title="Trip Service", lifespan=lifespan)
 
-if __name__ == "__main__":
-    asyncio.run(main())
+@app.post("/trip/process")
+async def process(req: TripRequest):
+    try:
+        return await dispatcher.process_request(req.user_id, req.flight_number, req.city)
+    except Exception as e:
+        log.error(f"Error: {e}")
+        raise HTTPException(500, str(e))
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "service": "trip_service"}
