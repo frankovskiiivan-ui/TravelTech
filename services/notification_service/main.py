@@ -1,26 +1,29 @@
 """Точка входа Notification Service"""
-import asyncio
-from shared.kafka_client import KafkaClient
-from shared.logger import get_logger
-from services.notification_service.handler import NotificationService
-from services.recommendation_service.personalizer import RecommendationService
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+from services.trip_service.dispatcher import dispatcher
 
-logger = get_logger("NotificationService.Main")
+app = FastAPI()
 
+class SearchRequest(BaseModel):
+    city_from: str
+    city_to: str
+    date: str | None = None
 
-async def main():
-    logger.info("🚀 Notification Service starting...")
-    
-    kafka = KafkaClient()
-    recommendation = RecommendationService()
-    
-    # Регистрируем обработчик — он подпишется на Kafka
-    NotificationService(kafka, recommendation)
-    
-    # В реальности тут был бы consumer loop; для демо — просто ждем
-    logger.info("Waiting for events...")
-    await asyncio.sleep(3600)
+class BookRequest(BaseModel):
+    user_id: str
+    flight_iata: str
+    passengers: int = Field(ge=1, le=9)
 
+@app.post("/api/search-flights")
+async def search_flights(req: SearchRequest):
+    flights = await dispatcher.search_flights(req.city_from, req.city_to, req.date)
+    return {"flights": flights}
 
-if __name__ == "__main__":
-    asyncio.run(main())
+@app.post("/api/book-trip")
+async def book_trip(req: BookRequest):
+    result = await dispatcher.book_trip(req.user_id, req.flight_iata, req.passengers)
+    if result.get("status") not in ["BOOKED", "BOOKED_WITH_HOTELS"]:
+        raise HTTPException(status_code=400, detail=result.get("message", "Ошибка бронирования"))
+    return result
+

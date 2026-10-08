@@ -1,8 +1,8 @@
-"""Push-уведомления"""
 from shared.logger import get_logger
 
-logger = get_logger("Channel.Push")
+log = get_logger("push_channel")
 
 
-async def send_push(user_id: str, text: str) -> None:
-    logger.info(f"📱 PUSH → {user_id}: {text}")
+async def send(trip_id: str, message: str) -> bool:
+    log.info(f"[PUSH] -> {trip_id}: {message}")
+    return True

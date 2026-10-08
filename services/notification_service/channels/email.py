@@ -1,8 +1,8 @@
-"""Email-уведомления"""
 from shared.logger import get_logger
 
-logger = get_logger("Channel.Email")
+log = get_logger("email_channel")
 
 
-async def send_email(user_id: str, text: str) -> None:
-    logger.info(f"📧 EMAIL → {user_id}: {text}")
+async def send(trip_id: str, message: str) -> bool:
+    log.info(f"[EMAIL] -> {trip_id}: {message}")
+    return True
