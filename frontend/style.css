@@ -1,0 +1,361 @@
+:root {
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --border: #e5e7eb;
+  --success: #16a34a;
+  --error: #dc2626;
+}
+
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: var(--primary);
+  color: #fff;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.container {
+  max-width: 1024px;
+  margin: 1.5rem auto;
+  padding: 0 1rem;
+}
+
+.search-form {
+  background: var(--surface);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.btn {
+  grid-column: 1 / -1;
+  padding: 0.75rem;
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn:hover {
+  background-color: var(--primary-hover);
+}
+
+.results {
+  margin-top: 2rem;
+  background: var(--surface);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.hidden {
+  display: none;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+th {
+  background-color: #f9fafb;
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.status {
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.status.success {
+  background-color: #dcfce7;
+  color: var(--success);
+  border: 1px solid #bbf7d0;
+}
+
+.status.error {
+  background-color: #fee2e2;
+  color: var(--error);
+  border: 1px solid #fecaca;
+}
+
+.no-results {
+  text-align: center;
+  padding: 1rem;
+  color: #6b7280;
+}
+
+.hint { opacity: 0.6; padding: 12px 0; }
+.error { color: #f44336; }
+.hidden { display: none; }
+
+.flights-list, .hotels-list { display: flex; flex-direction: column; gap: 12px; }
+
+.flight-card, .hotel-card {
+    background: rgba(0,0,0,0.25);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.flight-info { flex: 1; }
+.flight-info b { font-size: 1.1em; color: #4fc3f7; }
+.flight-info .route { margin-left: 10px; opacity: 0.85; }
+.flight-info small { display: block; opacity: 0.7; margin-top: 4px; }
+
+.flight-actions { display: flex; gap: 8px; align-items: center; }
+.pax-input { width: 60px; padding: 6px; text-align: center; }
+.flight-actions button { width: auto; margin: 0; padding: 8px 16px; }
+
+.summary-card {
+    background: rgba(76, 175, 80, 0.15);
+    border-left: 4px solid #4caf50;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+}
+
+.hotel-card .platform {
+    background: #1976d2;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75em;
+    margin-left: 8px;
+}
+
+.book-link {
+    background: linear-gradient(90deg, #4fc3f7, #29b6f6);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+
+
+.hotel-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.hotel-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.hotel-body {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.hotel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hotel-header b {
+    font-size: 1.05em;
+    color: #4fc3f7;
+}
+
+.hotel-meta {
+    opacity: 0.7;
+    font-size: 0.85em;
+    text-transform: capitalize;
+}
+
+.hotel-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9em;
+}
+
+.hotel-rating .stars {
+    color: #ffd54f;
+    letter-spacing: 1px;
+}
+
+.hotel-rating .reviews {
+    opacity: 0.6;
+    font-size: 0.85em;
+}
+
+.hotel-host {
+    opacity: 0.65;
+    font-size: 0.85em;
+}
+
+.hotel-location {
+    opacity: 0.7;
+    font-size: 0.85em;
+}
+
+.hotel-price {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 160px;
+    align-items: flex-end;
+}
+
+.price-total {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #4caf50;
+}
+
+.price-nights {
+    font-size: 0.8em;
+    opacity: 0.7;
+}
+
+.no-link {
+    font-size: 0.85em;
+    opacity: 0.5;
+}
+
+/* ─── Бейджи платформы ─── */
+.platform {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
+.platform-airbnb {
+    background: #ff5a5f;
+    color: #fff;
+}
+
+.platform-booking {
+    background: #003580;
+    color: #fff;
+}
+
+.platform-vrbo {
+    background: #1f6fd4;
+    color: #fff;
+}
+
+.superhost {
+    background: #f59e0b;
+    color: #1a1a1a;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    font-weight: bold;
+}
+
+/* ─── Бейджи статуса рейса ─── */
+.badge.SCHEDULED,
+.badge.ON_TIME {
+    background: #4caf50;
+}
+
+.badge.DELAYED {
+    background: #ff9800;
+}
+
+.badge.CANCELLED {
+    background: #f44336;
+}
+
+.badge.UNKNOWN {
+    background: #607d8b;
+}
+
+/* ─── Список отелей ─── */
+.hotels-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+/* ─── Инпуты количества пассажиров ─── */
+.pax-input {
+    width: 60px;
+    padding: 6px;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.3);
+    color: #fff;
+}
+
+.flight-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.flight-actions button {
+    width: auto;
+    margin: 0;
+    padding: 8px 16px;
+}

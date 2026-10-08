@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>TravelTech — Поиск рейсов</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+    <h1>✈️ TravelTech — Поиск и бронирование</h1>
+    <p class="subtitle">Реальные рейсы через AirLabs, отели через StayingAPI</p>
+</header>
+
+<div class="container">
+    <!-- ШАГ 1: Поиск -->
+    <section class="panel">
+        <h2>1️⃣ Поиск рейса</h2>
+        <form id="search-form">
+            <label>Откуда (город или IATA)</label>
+            <input type="text" id="city_from" value="Moscow" placeholder="Moscow / SVO" required>
+
+            <label>Куда (город или IATA)</label>
+            <input type="text" id="city_to" value="Sochi" placeholder="Sochi / AER" required>
+
+            <label>Дата (YYYY-MM-DD)</label>
+            <input type="date" id="date">
+
+            <button type="submit">Найти рейсы</button>
+        </form>
+    </section>
+
+    <!-- ШАГ 2: Выбор рейса -->
+    <section class="panel">
+        <h2>2️⃣ Доступные рейсы</h2>
+        <div id="flights-list" class="flights-list">
+            <p class="hint">Введите города и нажмите «Найти рейсы»</p>
+        </div>
+    </section>
+</div>
+
+<!-- ШАГ 3: Отели -->
+<section class="panel full-width hidden" id="hotels-section">
+    <h2>3️⃣ Отели для бронирования</h2>
+    <div id="booking-summary" class="booking-summary"></div>
+    <div id="hotels-list" class="hotels-list"></div>
+</section>
+
+<!-- История -->
+<section class="panel full-width">
+    <h2>📋 История бронирований</h2>
+    <div id="trips-list" class="trips-list"></div>
+</section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
