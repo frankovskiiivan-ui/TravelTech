@@ -1,79 +1,62 @@
 """Эндпоинты API Gateway"""
-import httpx
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from shared.config import settings
+from typing import Optional
+import httpx
+import uuid
 from shared.logger import get_logger
+from shared.database import db
+from shared.kafka_client import kafka
+from shared.config import settings
 
-logger = get_logger("APIGateway.Routes")
-router = APIRouter()
+log = get_logger("api_gateway")
+router = APIRouter(prefix="/api", tags=["gateway"])
 
-
-# --- Pydantic-схемы запросов ---
-class FlightStatusRequest(BaseModel):
+# --- Схемы ---
+class TripRequest(BaseModel):
+    user_id: str
     flight_number: str
+    city: str
 
-class SearchRequest(BaseModel):
-    user_id: str
-    origin: str
-    destination: str
-    date: str | None = None
-
-class PaymentRequest(BaseModel):
-    user_id: str
+class FeedbackRequest(BaseModel):
     trip_id: str
-    amount: float
-    method: str  # SBP, PayPal
+    rating: int
+    comment: Optional[str] = ""
 
+# --- Endpoints ---
 
-# --- Эндпоинты ---
-
-@router.post("/status")
-async def get_flight_status(req: FlightStatusRequest):
-    """Узнать статус рейса"""
-    logger.info(f"POST /status flight={req.flight_number}")
-    async with httpx.AsyncClient() as client:
+@router.post("/check-flight")
+async def check_flight(req: TripRequest):
+    """Проксирует запрос в Trip Service"""
+    async with httpx.AsyncClient(timeout=30.0) as client:
         try:
-            resp = await client.post(
-                f"{settings.TRIP_SERVICE_URL}/internal/status",
-                json={"flight_number": req.flight_number},
-                timeout=10.0
-            )
-            return resp.json()
-        except httpx.RequestError as e:
-            logger.error(f"Trip service unavailable: {e}")
-            raise HTTPException(status_code=503, detail="Service unavailable")
-
-
-@router.post("/search")
-async def search_trip(req: SearchRequest):
-    """Найти альтернативный вариант"""
-    logger.info(f"POST /search user={req.user_id}")
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.post(
-                f"{settings.TRIP_SERVICE_URL}/internal/search",
+            response = await client.post(
+                f"{settings.trip_service_url}/trip/process",
                 json=req.model_dump(),
-                timeout=30.0
             )
-            return resp.json()
-        except httpx.RequestError as e:
-            logger.error(f"Trip service unavailable: {e}")
-            raise HTTPException(status_code=503, detail="Service unavailable")
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPError as e:
+            log.error(f"Trip Service error: {e}")
+            raise HTTPException(status_code=502, detail="Trip service unavailable")
 
+@router.post("/feedback")
+async def submit_feedback(req: FeedbackRequest):
+    """Отправляет feedback в Kafka"""
+    await kafka.publish(settings.kafka_topic_feedback, req.model_dump())
+    return {"status": "ok", "message": "Спасибо за отзыв!"}
 
-@router.post("/pay")
-async def pay(req: PaymentRequest):
-    """Оплатить поездку"""
-    logger.info(f"POST /pay trip={req.trip_id}")
-    async with httpx.AsyncClient() as client:
-        try:
-            resp = await client.post(
-                f"{settings.TRIP_SERVICE_URL}/internal/pay",
-                json=req.model_dump(),
-                timeout=30.0
-            )
-            return resp.json()
-        except httpx.RequestError as e:
-            logger.error(f"Trip service unavailable: {e}")
-            raise HTTPException(status_code=503, detail="Service unavailable")
+@router.get("/trips")
+async def get_trips():
+    return await db.get_all_trips()
+
+@router.get("/trip/{trip_id}")
+async def get_trip(trip_id: str):
+    trip = await db.get_trip(trip_id)
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    return trip
+
+@router.get("/stats")
+async def get_stats():
+    return await db.get_stats()
