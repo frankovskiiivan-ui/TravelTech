@@ -1,25 +1,18 @@
-"""Обертка над Kafka (pub/sub)"""
-import asyncio
-from typing import Callable, Dict, List
-from shared.logger import get_logger
-
-logger = get_logger("Kafka")
-
+"""
+Заглушка Kafka. В runtime подменяется на shared.mocks.MockKafka.
+"""
 
 class KafkaClient:
-    """In-memory мок Kafka"""
-    
-    def __init__(self):
-        self._topics: Dict[str, List[Callable]] = {}
-        logger.info("Kafka producer connected")
+    def __init__(self): pass
 
-    async def publish(self, topic: str, message: dict) -> None:
-        logger.info(f"PUBLISH topic={topic} event={message.get('event')}")
-        handlers = self._topics.get(topic, [])
-        for handler in handlers:
-            # Fire-and-forget, как в реальной Kafka
-            asyncio.create_task(handler(message))
+    async def start_producer(self): pass
+    async def stop_all(self): pass
 
-    def subscribe(self, topic: str, handler: Callable) -> None:
-        self._topics.setdefault(topic, []).append(handler)
-        logger.info(f"SUBSCRIBED to topic={topic}")
+    async def publish(self, topic: str, message: dict):
+        raise NotImplementedError("Kafka not configured. Use mocks.")
+
+    async def subscribe(self, topic: str, group_id: str, handler):
+        raise NotImplementedError("Kafka not configured. Use mocks.")
+
+
+kafka = KafkaClient()
