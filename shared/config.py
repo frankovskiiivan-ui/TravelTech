@@ -1,28 +1,28 @@
-"""Настройки проекта (читаются из переменных окружения)"""
+"""Конфигурация проекта. Читает переменные из .env."""
 import os
-from dataclasses import dataclass, field
+import shared.env_loader
+
+def _load_env(path: str = ".env"):
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
 
 
-@dataclass
+_load_env()
+
+
 class Settings:
-    # Database
-    POSTGRES_DSN: str = os.getenv("POSTGRES_DSN", "postgresql://user:pass@localhost:5432/traveltech")
-    
-    # Redis
-    REDIS_URL: str = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    
-    # Kafka
-    KAFKA_BOOTSTRAP: str = os.getenv("KAFKA_BOOTSTRAP", "localhost:9092")
-    KAFKA_TOPIC_EVENTS: str = "trip_events"
-    
-    # External API
-    AVIATION_API_URL: str = os.getenv("AVIATION_API_URL", "https://api.aviation.mock")
-    BOOKING_API_URL: str = os.getenv("BOOKING_API_URL", "https://api.booking.mock")
-    PAYMENT_API_URL: str = os.getenv("PAYMENT_API_URL", "https://api.payment.mock")
-    
-    # Service URLs
-    TRIP_SERVICE_URL: str = os.getenv("TRIP_SERVICE_URL", "http://trip_service:8001")
-    FLIGHT_TRACKER_URL: str = os.getenv("FLIGHT_TRACKER_URL", "http://flight_tracker:8002")
+    airlabs_key = os.getenv("AIRLABS_KEY", "")
+    staying_key = os.getenv("STAYING_KEY", "")
+    log_level = os.getenv("LOG_LEVEL", "INFO")
+
+    kafka_topic_notifications = "notifications"
+    kafka_topic_trips = "trip-events"
+    kafka_topic_feedback = "feedback"
 
 
 settings = Settings()
